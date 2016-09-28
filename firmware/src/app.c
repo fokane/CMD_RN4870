@@ -78,6 +78,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 APP_DATA appData;
 
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
@@ -96,6 +97,44 @@ APP_DATA appData;
 
 /* TODO:  Add any necessary local functions.
 */
+static int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
+int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
+{
+    if(argc < 2)
+    {
+        return true;
+    }
+    
+    
+
+    switch(*argv[1])
+    {
+        case '1':
+        {
+            BSP_LEDToggle(BSP_LED_1);
+            break;
+        }
+        case '2':
+        {
+            BSP_LEDToggle(BSP_LED_2);
+            break;
+        }
+        case '3':
+        {
+            BSP_LEDToggle(BSP_LED_3);
+            break;
+        }
+        default:
+        {
+            
+            break;
+        }
+    }
+    SYS_MESSAGE("LED command.");
+    SYS_MESSAGE("\n");
+    
+    return true;
+}
 
 
 // *****************************************************************************
@@ -103,7 +142,10 @@ APP_DATA appData;
 // Section: Application Initialization and State Machine Functions
 // *****************************************************************************
 // *****************************************************************************
-
+static const SYS_CMD_DESCRIPTOR    appCmdTbl[]=
+{
+    {"led",        _APP_Commands_LED,              ": Toggle LED."}
+};
 /*******************************************************************************
   Function:
     void APP_Initialize ( void )
@@ -121,6 +163,7 @@ void APP_Initialize ( void )
     /* TODO: Initialize your application's state machine and other
      * parameters.
      */
+    SYS_CMD_ADDGRP(appCmdTbl, sizeof(appCmdTbl)/sizeof(*appCmdTbl), "app", ": app commands");
 }
 
 
@@ -141,18 +184,18 @@ void APP_Tasks ( void )
         /* Application's initial state. */
         case APP_STATE_INIT:
         {
-            bool appInitialized = true;
-       
-        
-            if (appInitialized)
+            if(SYS_CMD_READY_TO_READ() == true)
             {
-            
-                appData.state = APP_STATE_SERVICE_TASKS;
+                SYS_MESSAGE("Ready to accept command input.");
+                SYS_MESSAGE("\n");
+
+                // change state
+                appData.state = APP_STATE_IDLE;
             }
+
             break;
         }
-
-        case APP_STATE_SERVICE_TASKS:
+        case APP_STATE_IDLE:
         {
         
             break;
