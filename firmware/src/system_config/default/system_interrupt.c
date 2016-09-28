@@ -75,6 +75,25 @@ void __ISR(_TIMER_1_VECTOR, ipl1AUTO) IntHandlerDrvTmrInstance0(void)
 {
     DRV_TMR_Tasks(sysObj.drvTmr0);
 }
+ void __ISR(_UART_2_VECTOR, ipl4AUTO) _IntHandlerDrvUsartInstance0(void)
+{
+    DRV_USART_TasksTransmit(sysObj.drvUsart0);
+    DRV_USART_TasksReceive(sysObj.drvUsart0);
+    DRV_USART_TasksError(sysObj.drvUsart0);
+}
+ 
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
  	
 	
 	

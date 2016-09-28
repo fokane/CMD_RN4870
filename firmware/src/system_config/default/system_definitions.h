@@ -60,6 +60,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "system/tmr/sys_tmr.h"
 #include "system/reset/sys_reset.h"
 #include "driver/tmr/drv_tmr.h"
+#include "driver/usart/drv_usart.h"
 #include "system/ports/sys_ports.h"
 #include "system/command/sys_command.h"
 #include "driver/usb/usbfs/drv_usbfs.h"
@@ -105,6 +106,7 @@ typedef struct
     SYS_MODULE_OBJ  sysDevcon;
     SYS_MODULE_OBJ  sysTmr;
     SYS_MODULE_OBJ  drvTmr0;
+    SYS_MODULE_OBJ  drvUsart0;
     SYS_MODULE_OBJ  sysConsole0;
     SYS_MODULE_OBJ  drvUSBObject;
     

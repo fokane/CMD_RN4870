@@ -77,7 +77,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 */
 
 APP_DATA appData;
-
+DRV_HANDLE usartDriverHandle;
 
 // *****************************************************************************
 // *****************************************************************************
@@ -184,6 +184,27 @@ void APP_Tasks ( void )
         /* Application's initial state. */
         case APP_STATE_INIT:
         {
+            // open USART driver
+            usartDriverHandle = DRV_USART_Open(DRV_USART_INDEX_0, DRV_IO_INTENT_EXCLUSIVE);
+            
+            // check for valid handle
+            if (DRV_HANDLE_INVALID == usartDriverHandle)
+            {
+                // Unable to open the driver
+                // May be the driver is not initialized or the initialization
+                // is not complete.
+            }
+            else
+            {
+                appData.state = APP_STATE_START_CMD_PROCESSOR;
+            }
+            
+            
+
+            break;
+        }
+        case APP_STATE_START_CMD_PROCESSOR:
+        {
             if(SYS_CMD_READY_TO_READ() == true)
             {
                 SYS_MESSAGE("Ready to accept command input.");
@@ -192,7 +213,6 @@ void APP_Tasks ( void )
                 // change state
                 appData.state = APP_STATE_IDLE;
             }
-
             break;
         }
         case APP_STATE_IDLE:

@@ -30,6 +30,10 @@
         <Path>Header Files/framework/system/reset/src</Path>
       </File>
       <File>
+        <Name>drv_usart_byte_model.c</Name>
+        <Path>Source Files/framework/driver/usart/src/dynamic</Path>
+      </File>
+      <File>
         <Name>sys_tmr.c</Name>
         <Path>Source Files/framework/system/tmr/src</Path>
       </File>
@@ -106,6 +110,10 @@
         <Path>Header Files/framework/system</Path>
       </File>
       <File>
+        <Name>drv_usart.h</Name>
+        <Path>Header Files/framework/driver/usart</Path>
+      </File>
+      <File>
         <Name>sys_console.h</Name>
         <Path>Header Files/framework/system/console</Path>
       </File>
@@ -158,6 +166,10 @@
         <Path>Source Files/framework/system/devcon/src</Path>
       </File>
       <File>
+        <Name>sys_dma.h</Name>
+        <Path>Header Files/framework/system/dma</Path>
+      </File>
+      <File>
         <Name>sys_console.c</Name>
         <Path>Source Files/framework/system/console/src</Path>
       </File>
@@ -182,6 +194,10 @@
         <Path>Header Files/framework/usb</Path>
       </File>
       <File>
+        <Name>drv_usart_local.h</Name>
+        <Path>Header Files/framework/driver/usart/src</Path>
+      </File>
+      <File>
         <Name>usb_host_hub_interface.h</Name>
         <Path>Header Files/framework/usb</Path>
       </File>
@@ -192,6 +208,10 @@
       <File>
         <Name>sys_ports.h</Name>
         <Path>Header Files/framework/system/ports</Path>
+      </File>
+      <File>
+        <Name>drv_usart.c</Name>
+        <Path>Source Files/framework/driver/usart/src/dynamic</Path>
       </File>
       <File>
         <Name>sys_command.h</Name>
@@ -226,12 +246,12 @@
         <Path>Header Files/framework/system/clk</Path>
       </File>
       <File>
-        <Name>osal_definitions.h</Name>
-        <Path>Header Files/framework/osal</Path>
-      </File>
-      <File>
         <Name>sys_int_mapping.h</Name>
         <Path>Header Files/framework/system/int</Path>
+      </File>
+      <File>
+        <Name>osal_definitions.h</Name>
+        <Path>Header Files/framework/osal</Path>
       </File>
       <File>
         <Name>sys_devcon.h</Name>
@@ -248,6 +268,10 @@
       <File>
         <Name>usb_device_cdc_acm.c</Name>
         <Path>Source Files/framework/usb/src/dynamic</Path>
+      </File>
+      <File>
+        <Name>drv_usart_variant_mapping.h</Name>
+        <Path>Header Files/framework/driver/usart/src</Path>
       </File>
       <File>
         <Name>sys_module.h</Name>
@@ -295,7 +319,7 @@
       <Template>
         <Name>system_init.c</Name>
         <Path>Source Files/app/system_config/default</Path>
-        <Checksum>5737E5D4D3BF53AF9785537643EB22D0</Checksum>
+        <Checksum>D126DCF64E4409D87D5D375CD6B0A367</Checksum>
       </Template>
       <Template>
         <Name>main.c</Name>
@@ -304,7 +328,7 @@
       <Template>
         <Name>system_definitions.h</Name>
         <Path>Header Files/app/system_config/default</Path>
-        <Checksum>80692E93B2F49294A1DA10B6CC1AEDE7</Checksum>
+        <Checksum>261B11FFAA2290EA7C0EB74D0B61B609</Checksum>
       </Template>
       <Template>
         <Name>system_exceptions.c</Name>
@@ -333,7 +357,7 @@
       <Template>
         <Name>system_config.h</Name>
         <Path>Header Files/app/system_config/default</Path>
-        <Checksum>51E9075AA70886B0983B13B454EBA53F</Checksum>
+        <Checksum>60DDAE5B88B906F9255C58C3D9FA59A6</Checksum>
       </Template>
       <Template>
         <Name>app.h</Name>
@@ -347,7 +371,7 @@
       <Template>
         <Name>system_interrupt.c</Name>
         <Path>Source Files/app/system_config/default</Path>
-        <Checksum>A999D8A563DD96772D4BCB1C0D5BDEAE</Checksum>
+        <Checksum>6F6CC0B05D5A254D3AC60183577A1544</Checksum>
       </Template>
       <Template>
         <Name>sys_clk_static.c</Name>
