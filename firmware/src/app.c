@@ -78,15 +78,35 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 APP_DATA appData;
 DRV_HANDLE usartDriverHandle;
-
+DRV_USART_BUFFER_HANDLE usartBufferHandle;
+uint8_t usartTxBuffer[USART_TX_BUFFER_SIZE_BYTES];
+uint8_t usartRxBuffer[USART_TX_BUFFER_SIZE_BYTES];
+volatile uint8_t usartRxBufferIndex;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
 // *****************************************************************************
 // *****************************************************************************
 
-/* TODO:  Add any necessary callback functions.
-*/
+void APP_USARTReceiveEventHandler(const SYS_MODULE_INDEX index)
+{
+    // Byte has been Received. Handle the event.
+    // Read byte using DRV_USART_ReadByte ()
+    // DRV_USART_ReceiverBufferIsEmpty() function can be used to
+    // check if the receiver buffer is empty.
+    usartRxBuffer[usartRxBufferIndex++] = DRV_USART_ReadByte(usartDriverHandle);
+    
+    // check for bounds, reset to 0 if at the max
+    if(usartRxBufferIndex == USART_RX_BUFFER_SIZE_BYTES)
+    {
+        usartRxBufferIndex = 0;
+    }
+}
+
+void APP_USARTTransmitEventHandler (const SYS_MODULE_INDEX index)
+{
+    // Byte has been transmitted. Handle the event.
+}
 
 // *****************************************************************************
 // *****************************************************************************
@@ -111,6 +131,12 @@ int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
     {
         case '1':
         {
+            // send scan command
+            usartTxBuffer[0] = 'F';
+            usartTxBuffer[1] = 0x0D;
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            
             BSP_LEDToggle(BSP_LED_1);
             break;
         }
@@ -159,6 +185,7 @@ void APP_Initialize ( void )
     /* Place the App state machine in its initial state. */
     appData.state = APP_STATE_INIT;
 
+    usartRxBufferIndex = 0;
     
     /* TODO: Initialize your application's state machine and other
      * parameters.
@@ -193,9 +220,18 @@ void APP_Tasks ( void )
                 // Unable to open the driver
                 // May be the driver is not initialized or the initialization
                 // is not complete.
+                while(1);
             }
             else
             {
+                // Register an event handler with driver. This is done once
+                DRV_USART_ByteReceiveCallbackSet(DRV_USART_INDEX_0, APP_USARTReceiveEventHandler);
+
+                // Register an event handler with driver. This is done once
+                DRV_USART_ByteTransmitCallbackSet (DRV_USART_INDEX_0, APP_USARTTransmitEventHandler);
+
+
+                // start CMD processor
                 appData.state = APP_STATE_START_CMD_PROCESSOR;
             }
             
