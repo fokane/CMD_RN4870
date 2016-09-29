@@ -131,17 +131,27 @@ int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
     {
         case '1':
         {
-            // send scan command
-            usartTxBuffer[0] = 'F';
-            usartTxBuffer[1] = 0x0D;
+            // enter command mode
+            usartTxBuffer[0] = '$';
+            usartTxBuffer[1] = '$';
+            usartTxBuffer[2] = '$';
+            usartTxBuffer[3] = 0x0D;
             DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
             DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[2]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[3]);
             
             BSP_LEDToggle(BSP_LED_1);
             break;
         }
         case '2':
         {
+            // send scan command
+            usartTxBuffer[0] = 'F';
+            usartTxBuffer[1] = 0x0D;
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            
             BSP_LEDToggle(BSP_LED_2);
             break;
         }
