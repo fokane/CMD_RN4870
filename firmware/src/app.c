@@ -161,6 +161,16 @@ int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
         }
         case '3':
         {
+            // reset the read buffer index
+            usartRxBufferIndex = 0;
+            
+            // send stop scan command
+            usartTxBuffer[0] = 'X';
+            usartTxBuffer[1] = 0x0D;
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            
+            
             BSP_LEDToggle(BSP_LED_3);
             break;
         }
