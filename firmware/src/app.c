@@ -54,6 +54,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
+#include "system/debug/sys_debug.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -80,8 +81,10 @@ APP_DATA appData;
 DRV_HANDLE usartDriverHandle;
 DRV_USART_BUFFER_HANDLE usartBufferHandle;
 uint8_t usartTxBuffer[USART_TX_BUFFER_SIZE_BYTES];
-uint8_t usartRxBuffer[USART_TX_BUFFER_SIZE_BYTES];
+uint8_t usartRxBuffer[USART_RX_BUFFER_SIZE_BYTES];
 volatile uint8_t usartRxBufferIndex;
+SYS_TMR_HANDLE sysTmrHandle;
+const uint8_t bleMacAddress[] = "001122334455";
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
@@ -117,8 +120,8 @@ void APP_USARTTransmitEventHandler (const SYS_MODULE_INDEX index)
 
 /* TODO:  Add any necessary local functions.
 */
-static int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
-int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
+static int32_t _APP_Commands(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv);
+int32_t _APP_Commands(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
 {
     if(argc < 2)
     {
@@ -131,45 +134,28 @@ int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
     {
         case '1':
         {
-            // reset the read buffer index
-            usartRxBufferIndex = 0;
-            
-            // enter command mode
-            usartTxBuffer[0] = '$';
-            usartTxBuffer[1] = '$';
-            usartTxBuffer[2] = '$';
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[2]);
+            appData.state = APP_STATE_ENTER_CMD_MODE;
             
             BSP_LEDToggle(BSP_LED_1);
             break;
         }
         case '2':
         {
-            // reset the read buffer index
-            usartRxBufferIndex = 0;
-            
-            // send scan command
-            usartTxBuffer[0] = 'F';
-            usartTxBuffer[1] = 0x0D;
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            appData.state = APP_STATE_START_SCAN;
             
             BSP_LEDToggle(BSP_LED_2);
             break;
         }
         case '3':
         {
-            // reset the read buffer index
-            usartRxBufferIndex = 0;
+            appData.state = APP_STATE_STOP_SCAN;
             
-            // send stop scan command
-            usartTxBuffer[0] = 'X';
-            usartTxBuffer[1] = 0x0D;
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
-            
+            BSP_LEDToggle(BSP_LED_3);
+            break;
+        }
+        case '4':
+        {
+            appData.state = APP_STATE_CONNECT;
             
             BSP_LEDToggle(BSP_LED_3);
             break;
@@ -180,7 +166,7 @@ int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
             break;
         }
     }
-    SYS_MESSAGE("LED command.");
+    SYS_MESSAGE("Command.");
     SYS_MESSAGE("\n");
     
     return true;
@@ -194,7 +180,7 @@ int32_t _APP_Commands_LED(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
 // *****************************************************************************
 static const SYS_CMD_DESCRIPTOR    appCmdTbl[]=
 {
-    {"led",        _APP_Commands_LED,              ": Toggle LED."}
+    {"cmd",        _APP_Commands,              ": BLE commands."}
 };
 /*******************************************************************************
   Function:
@@ -228,7 +214,8 @@ void APP_Initialize ( void )
 
 void APP_Tasks ( void )
 {
-
+    uint8_t index;
+    
     /* Check the application's current state. */
     switch ( appData.state )
     {
@@ -268,11 +255,151 @@ void APP_Tasks ( void )
             if(SYS_CMD_READY_TO_READ() == true)
             {
                 SYS_MESSAGE("Ready to accept command input.");
+                SYS_MESSAGE("cmd [n]\r\n");
+                SYS_MESSAGE("\t1 - enter cmd mode\r\n");
+                SYS_MESSAGE("\t2 - start scan\r\n");
+                SYS_MESSAGE("\t3 - stop scan\r\n");
+                SYS_MESSAGE("\t4 - connect to stored MAC address\r\n");
                 SYS_MESSAGE("\n");
 
                 // change state
                 appData.state = APP_STATE_IDLE;
             }
+            break;
+        }
+        case APP_STATE_WAIT_1SECS:
+        {
+            SYS_MESSAGE("waiting 1 sec..\r\n");
+            
+            // start 1s timer
+            sysTmrHandle = SYS_TMR_DelayMS(1000);
+
+            // change state
+            appData.state = APP_STATE_CHECK_TIMER;
+            break;
+        }
+        case APP_STATE_WAIT_5SECS:
+        {
+            SYS_MESSAGE("waiting 5 secs..\r\n");
+            
+            // start 5s timer
+            sysTmrHandle = SYS_TMR_DelayMS(5000);
+            
+            // change state
+            appData.state = APP_STATE_CHECK_TIMER;
+            break;
+        }
+        case APP_STATE_CHECK_TIMER:
+        {
+            if(SYS_TMR_DelayStatusGet(sysTmrHandle))
+            {
+                SYS_MESSAGE("time up\r\n");
+                
+                // print out whatever is in the receive buffer
+                if(usartRxBuffer[0] == 0)
+                {
+                    SYS_MESSAGE("receive buffer empty\r\n");
+                }
+                else
+                {
+                    SYS_CONSOLE_PRINT("%s\r\n", usartRxBuffer);
+                }
+                
+                
+                // clear receive buffer
+                memset(usartRxBuffer, 0, sizeof(usartRxBuffer));
+            
+                // back to idle state
+                appData.state = APP_STATE_IDLE;
+            }
+            
+            break;
+        }
+        case APP_STATE_ENTER_CMD_MODE:
+        {
+        
+            SYS_MESSAGE("entering CMD mode..\r\n");
+            
+            // reset the read buffer index
+            usartRxBufferIndex = 0;
+            
+            // enter command mode
+            usartTxBuffer[0] = '$';
+            usartTxBuffer[1] = '$';
+            usartTxBuffer[2] = '$';
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[2]);
+            
+            appData.state = APP_STATE_WAIT_1SECS;
+            break;
+        }
+        case APP_STATE_START_SCAN:
+        {
+            SYS_MESSAGE("start scan..\r\n");
+            
+            // reset the read buffer index
+            usartRxBufferIndex = 0;
+            
+            // send scan command
+            usartTxBuffer[0] = 'F';
+            usartTxBuffer[1] = 0x0D;
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+        
+            appData.state = APP_STATE_WAIT_5SECS;
+            break;
+        }
+        case APP_STATE_STOP_SCAN:
+        {
+            SYS_MESSAGE("stop scan..\r\n");
+            
+            // reset the read buffer index
+            usartRxBufferIndex = 0;
+            
+            // send stop scan command
+            usartTxBuffer[0] = 'X';
+            usartTxBuffer[1] = 0x0D;
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            
+            appData.state = APP_STATE_WAIT_1SECS;
+            break;
+        }
+        case APP_STATE_CONNECT:
+        {
+            //SYS_MESSAGE("connecting..\r\n");
+            SYS_CMD_PRINT("connecting to %s..\r\n", bleMacAddress);
+            
+            // reset the read buffer index
+            usartRxBufferIndex = 0;
+            
+            // send stop scan command
+            usartTxBuffer[0] = 'C';
+            usartTxBuffer[1] = ',';
+            usartTxBuffer[2] = '0';
+            usartTxBuffer[3] = ',';
+            usartTxBuffer[4] = bleMacAddress[0];
+            usartTxBuffer[5] = bleMacAddress[1];
+            usartTxBuffer[6] = bleMacAddress[2];
+            usartTxBuffer[7] = bleMacAddress[3];
+            usartTxBuffer[8] = bleMacAddress[4];
+            usartTxBuffer[9] = bleMacAddress[5];
+            usartTxBuffer[10] = bleMacAddress[6];
+            usartTxBuffer[11] = bleMacAddress[7];
+            usartTxBuffer[12] = bleMacAddress[8];
+            usartTxBuffer[13] = bleMacAddress[9];
+            usartTxBuffer[14] = bleMacAddress[10];
+            usartTxBuffer[15] = bleMacAddress[11];
+            
+            for(index = 0; index < 16; index++)
+            {
+                DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[index]);
+            }
+            
+            
+            appData.state = APP_STATE_WAIT_1SECS;
+
             break;
         }
         case APP_STATE_IDLE:

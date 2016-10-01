@@ -72,7 +72,7 @@ extern "C" {
 // Section: Type Definitions
 // *****************************************************************************
 // *****************************************************************************
-#define USART_TX_BUFFER_SIZE_BYTES      16
+#define USART_TX_BUFFER_SIZE_BYTES      32
 #define USART_RX_BUFFER_SIZE_BYTES      256    
 // *****************************************************************************
 /* Application states
@@ -90,7 +90,14 @@ typedef enum
 	/* Application's state machine's initial state. */
 	APP_STATE_INIT=0,
 	APP_STATE_IDLE,
-            APP_STATE_START_CMD_PROCESSOR
+            APP_STATE_START_CMD_PROCESSOR,
+            APP_STATE_WAIT_1SECS,
+            APP_STATE_WAIT_5SECS,
+            APP_STATE_ENTER_CMD_MODE,
+            APP_STATE_START_SCAN,
+            APP_STATE_STOP_SCAN,
+            APP_STATE_CHECK_TIMER,
+            APP_STATE_CONNECT
 	/* TODO: Define states used by the application state machine. */
 
 } APP_STATES;
