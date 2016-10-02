@@ -97,7 +97,8 @@ typedef enum
             APP_STATE_START_SCAN,
             APP_STATE_STOP_SCAN,
             APP_STATE_CHECK_TIMER,
-            APP_STATE_CONNECT
+            APP_STATE_CONNECT,
+            APP_STATE_READ_SOLAR_DATA
 	/* TODO: Define states used by the application state machine. */
 
 } APP_STATES;

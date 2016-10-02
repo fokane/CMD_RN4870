@@ -85,6 +85,7 @@ uint8_t usartRxBuffer[USART_RX_BUFFER_SIZE_BYTES];
 volatile uint8_t usartRxBufferIndex;
 SYS_TMR_HANDLE sysTmrHandle;
 const uint8_t bleMacAddress[] = "001122334455";
+bool printAsHex;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
@@ -196,7 +197,7 @@ void APP_Initialize ( void )
     appData.state = APP_STATE_INIT;
 
     usartRxBufferIndex = 0;
-    
+    printAsHex = false;
     /* TODO: Initialize your application's state machine and other
      * parameters.
      */
@@ -260,7 +261,8 @@ void APP_Tasks ( void )
                 SYS_MESSAGE("\t2 - start scan\r\n");
                 SYS_MESSAGE("\t3 - stop scan\r\n");
                 SYS_MESSAGE("\t4 - connect to stored MAC address\r\n");
-                SYS_MESSAGE("\n");
+                SYS_MESSAGE("\t5 - read last day of solar data\r\n");
+                SYS_MESSAGE("\n\n");
 
                 // change state
                 appData.state = APP_STATE_IDLE;
@@ -302,7 +304,19 @@ void APP_Tasks ( void )
                 }
                 else
                 {
-                    SYS_CONSOLE_PRINT("%s\r\n", usartRxBuffer);
+                    if(printAsHex == false)
+                    {
+                        SYS_CONSOLE_PRINT("%s\r\n", usartRxBuffer);
+                    }
+                    else
+                    {
+                        SYS_CONSOLE_PRINT("%x, ", usartRxBuffer[5]);
+                        SYS_CONSOLE_PRINT("%x", usartRxBuffer[6]);
+                        SYS_CONSOLE_PRINT("%x", usartRxBuffer[7]);
+                        SYS_MESSAGE("\r\n");
+                        printAsHex = false;
+                    }
+                    
                 }
                 
                 
@@ -394,12 +408,54 @@ void APP_Tasks ( void )
             
             for(index = 0; index < 16; index++)
             {
+                // check transmitter is not full before writing
+                while((DRV_USART_TRANSFER_STATUS_TRANSMIT_FULL & DRV_USART_TransferStatus(usartDriverHandle)));
                 DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[index]);
             }
             
             
-            appData.state = APP_STATE_WAIT_1SECS;
+            appData.state = APP_STATE_WAIT_5SECS;
 
+            break;
+        }
+        case APP_STATE_READ_SOLAR_DATA:
+        {
+            SYS_MESSAGE("reading solar data..\r\n");
+            
+            // reset the read buffer index
+            usartRxBufferIndex = 0;
+            
+            // send command to solar inverter
+            usartTxBuffer[0] = 0x11;
+            usartTxBuffer[1] = 0x00;
+            usartTxBuffer[2] = 0x00;
+            usartTxBuffer[3] = 0x00;
+            usartTxBuffer[4] = 0x9A;
+            usartTxBuffer[5] = 0x01;
+            usartTxBuffer[6] = 0x00;
+            usartTxBuffer[7] = 0x00;
+            usartTxBuffer[8] = 0xAC;
+            /*
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[2]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[3]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[4]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[5]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[6]);
+            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[7]);
+            */
+            for(index = 0; index < 9; index++)
+            {
+                // check transmitter is not full before writing
+                while((DRV_USART_TRANSFER_STATUS_TRANSMIT_FULL & DRV_USART_TransferStatus(usartDriverHandle)));
+                DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[index]);
+            }
+            
+            // need to print the solar data as hex, not ASCII
+            printAsHex = true;
+            
+            appData.state = APP_STATE_WAIT_1SECS;
             break;
         }
         case APP_STATE_IDLE:
