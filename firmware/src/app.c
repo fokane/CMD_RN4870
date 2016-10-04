@@ -84,7 +84,7 @@ uint8_t usartTxBuffer[USART_TX_BUFFER_SIZE_BYTES];
 uint8_t usartRxBuffer[USART_RX_BUFFER_SIZE_BYTES];
 volatile uint8_t usartRxBufferIndex;
 SYS_TMR_HANDLE sysTmrHandle;
-const uint8_t bleMacAddress[] = "001122334455";
+const uint8_t bleMacAddress[] = "3481F407DB42";
 bool printAsHex;
 // *****************************************************************************
 // *****************************************************************************
@@ -158,7 +158,14 @@ int32_t _APP_Commands(SYS_CMD_DEVICE_NODE* pCmdIO, int argc, char** argv)
         {
             appData.state = APP_STATE_CONNECT;
             
-            BSP_LEDToggle(BSP_LED_3);
+            //BSP_LEDToggle(BSP_LED_3);
+            break;
+        }
+        case '5':
+        {
+            appData.state = APP_STATE_READ_SOLAR_DATA;
+            
+            //BSP_LEDToggle(BSP_LED_3);
             break;
         }
         default:
@@ -255,7 +262,7 @@ void APP_Tasks ( void )
         {
             if(SYS_CMD_READY_TO_READ() == true)
             {
-                SYS_MESSAGE("Ready to accept command input.");
+                SYS_MESSAGE("Ready to accept command input.\r\n");
                 SYS_MESSAGE("cmd [n]\r\n");
                 SYS_MESSAGE("\t1 - enter cmd mode\r\n");
                 SYS_MESSAGE("\t2 - start scan\r\n");
@@ -382,7 +389,6 @@ void APP_Tasks ( void )
         }
         case APP_STATE_CONNECT:
         {
-            //SYS_MESSAGE("connecting..\r\n");
             SYS_CMD_PRINT("connecting to %s..\r\n", bleMacAddress);
             
             // reset the read buffer index
@@ -405,8 +411,9 @@ void APP_Tasks ( void )
             usartTxBuffer[13] = bleMacAddress[9];
             usartTxBuffer[14] = bleMacAddress[10];
             usartTxBuffer[15] = bleMacAddress[11];
+            usartTxBuffer[16] = 0x0D;
             
-            for(index = 0; index < 16; index++)
+            for(index = 0; index < 17; index++)
             {
                 // check transmitter is not full before writing
                 while((DRV_USART_TRANSFER_STATUS_TRANSMIT_FULL & DRV_USART_TransferStatus(usartDriverHandle)));
