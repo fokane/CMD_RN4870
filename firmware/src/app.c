@@ -442,16 +442,7 @@ void APP_Tasks ( void )
             usartTxBuffer[6] = 0x00;
             usartTxBuffer[7] = 0x00;
             usartTxBuffer[8] = 0xAC;
-            /*
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[0]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[1]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[2]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[3]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[4]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[5]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[6]);
-            DRV_USART_WriteByte(usartDriverHandle, usartTxBuffer[7]);
-            */
+            
             for(index = 0; index < 9; index++)
             {
                 // check transmitter is not full before writing
@@ -462,7 +453,7 @@ void APP_Tasks ( void )
             // need to print the solar data as hex, not ASCII
             printAsHex = true;
             
-            appData.state = APP_STATE_WAIT_1SECS;
+            appData.state = APP_STATE_WAIT_5SECS;
             break;
         }
         case APP_STATE_IDLE:
